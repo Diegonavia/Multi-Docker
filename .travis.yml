@@ -1,0 +1,25 @@
+language: node.js
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t diegonavia/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true diegonavia/react-test npm run test
+
+after_success:
+  - docker build -t diegonavia/multi-client ./client
+  - docker build -t diegonavia/multi-nginx ./nginx
+  - docker build -t diegonavia/multi-server ./server
+  - docker build -t diegonavia/multi-worker ./worker
+
+  #Log into Dockerhub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  #push into dockerhub
+  - docker push diegonavia/multi-client
+  - docker push diegonavia/multi-nginx
+  - docker push diegonavia/multi-server
+  - docker push diegonavia/multi-worker
